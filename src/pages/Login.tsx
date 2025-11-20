@@ -26,7 +26,7 @@ export default function Login() {
         <div className="mb-6 flex justify-center">
           <img 
             src={logoIlyg} 
-            alt="Logo ILYG Kudos International" 
+            alt="ILYG" 
             className="w-48" // Ajusta el tamaño según sea necesario
           />
         </div>
