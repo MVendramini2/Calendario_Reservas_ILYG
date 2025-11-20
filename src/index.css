@@ -1,0 +1,27 @@
+@import "tailwindcss";
+
+
+@keyframes calendarFadeSlide {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.calendar-anim-enter {
+  animation: calendarFadeSlide 0.25s ease-out;
+}
+
+.btn-azul {
+  background-color: #0b43a8;
+  color: white;
+  transition: background-color 0.2s ease;
+}
+
+.btn-azul:hover {
+  background-color: #0d52d1;
+}
