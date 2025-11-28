@@ -4,17 +4,19 @@ import type { Evento, Sala } from "./Admin";
 
 type ReservasHistorialProps = {
   eventos: Evento[];
-  onVerDetalle: (ev: Evento) => void;  
+  onVerDetalle: (ev: Evento) => void;
+  onEliminar: (id: number) => void;
 };
 
 const ReservasHistorial: React.FC<ReservasHistorialProps> = ({
   eventos,
   onVerDetalle,
+  onEliminar,
 }) => {
   const [search, setSearch] = useState("");
   const [salaFilter, setSalaFilter] = useState<"todas" | Sala>("todas");
   const [page, setPage] = useState(1);
-  const pageSize = 1; 
+  const pageSize = 1;
 
   const nombreSala = (s: "A" | "B") => (s === "A" ? "Grande" : "Chica");
 
@@ -59,10 +61,6 @@ const ReservasHistorial: React.FC<ReservasHistorialProps> = ({
   const startIndex = (safePage - 1) * pageSize;
   const endIndex = safePage * pageSize;
   const reservasPagina = reservasFiltradas.slice(startIndex, endIndex);
-
-  // si cambian filtros/busqueda y la página queda alta, la bajamos a 1
-  // (opcional pero prolijo)
-  // Podés dejar así si no querés useEffect.
 
   return (
     <section className="rounded-2xl border bg-white p-6 shadow-sm">
@@ -152,7 +150,7 @@ const ReservasHistorial: React.FC<ReservasHistorialProps> = ({
             )}
 
             {reservasPagina.map((ev, idx) => (
-              <tr key={`${ev.date}-${ev.start}-${ev.sala}-${idx}`}>
+              <tr key={ev.id ?? `${ev.date}-${ev.start}-${ev.sala}-${idx}`}>
                 {/* Sala */}
                 <Td>
                   <div className="flex items-center gap-2">
@@ -197,12 +195,21 @@ const ReservasHistorial: React.FC<ReservasHistorialProps> = ({
 
                 {/* Acción */}
                 <Td className="text-right">
-                  <button
-                    className="text-sm font-medium text-[#0b43a8] hover:underline"
-                    onClick={() => onVerDetalle(ev)}
-                  >
-                    Ver Detalle
-                  </button>
+                  <div className="flex justify-end gap-3">
+                    <button
+                      className="text-sm font-medium text-[#0b43a8] hover:underline"
+                      onClick={() => onVerDetalle(ev)}
+                    >
+                      Ver Detalle
+                    </button>
+
+                    <button
+                      className="text-sm font-medium text-red-600 hover:underline"
+                      onClick={() => onEliminar(ev.id)}
+                    >
+                      Eliminar
+                    </button>
+                  </div>
                 </Td>
               </tr>
             ))}

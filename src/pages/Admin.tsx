@@ -1,12 +1,15 @@
 // src/pages/AdminCalendarPage.tsx
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import NewReservationModal from "../pages/NewReservationModal";
 import { useNavigate } from "react-router-dom";
 import ReservasHistorial from "./ReservaHistorial";
 
 export type Sala = "A" | "B";
 
+export type EventoSinId = Omit<Evento, "id">;
+
 export type Evento = {
+  id: number;
   sala: Sala;
   date: string;   // yyyy-mm-dd
   start: string;  // HH:mm
@@ -72,31 +75,91 @@ export default function AdminCalendarPage() {
   const [viewStart, setViewStart] = useState<Date>(startOfWeek(today));
 
   // eventos en estado (dos de ejemplo + los que se creen)
-  const [eventos, setEventos] = useState<Evento[]>(() => {
-    const semanaActual = startOfWeek(today);
-    const miercoles = addDays(semanaActual, 2);
-    const viernes = addDays(semanaActual, 4);
-    return [
-      {
-        sala: "A",
-        date: fmtISO(miercoles),
-        start: "10:00",
-        end: "11:00",
-        persona: "Juan Pérez",
-        area: "Operaciones",
-        motivo: "Reunión semanal",
+  const [eventos, setEventos] = useState<Evento[]>([]);
+
+  const handleLogout = () => {
+  
+  localStorage.removeItem("token");
+  localStorage.removeItem("username");
+  localStorage.removeItem("role");
+
+  navigate("/login");
+};
+
+  useEffect(() => {
+  const fetchReservas = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
+    const res = await fetch("http://localhost:3001/api/reservas", {
+      headers: {
+        Authorization: `Bearer ${token}`,
       },
-      {
-        sala: "B",
-        date: fmtISO(viernes),
-        start: "11:30",
-        end: "12:30",
-        persona: "María Gómez",
-        area: "Comercial",
-        motivo: "Demo producto",
-      },
-    ];
-  });
+    });
+
+    if (res.status === 401) {
+      // token vencido o inválido
+      localStorage.removeItem("token");
+      localStorage.removeItem("username");
+      localStorage.removeItem("role");
+      navigate("/login");
+      return;
+    }
+
+    if (!res.ok) {
+      console.error("Error al obtener reservas", await res.text());
+      return;
+    }
+
+    const data = await res.json();
+    setEventos(data);
+  };
+
+  fetchReservas();
+}, [navigate]);
+
+  const handleDeleteReserva = async (id: number) => {
+    const ok = window.confirm("¿Seguro que querés eliminar esta reserva?");
+    if (!ok) return;
+
+    try {
+      const token = localStorage.getItem("token");
+
+      const res = await fetch(
+        `http://localhost:3001/api/reservas/${id}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      let data: any = null;
+      try {
+        data = await res.json();
+      } catch {
+        // por si viene vacío
+      }
+
+      if (!res.ok) {
+        alert(
+          (data && data.message) ||
+          `No se pudo eliminar la reserva (código ${res.status})`
+        );
+        return;
+      }
+
+      // si salió bien, actualizamos el estado
+      setEventos((prev) => prev.filter((ev) => ev.id !== id));
+    } catch (err) {
+      console.error("Error de red al eliminar reserva:", err);
+      alert("Error de red al eliminar la reserva");
+    }
+  };
 
   const goPrevWeek = () => setViewStart(addDays(viewStart, -7));
   const goNextWeek = () => setViewStart(addDays(viewStart, 7));
@@ -150,7 +213,7 @@ export default function AdminCalendarPage() {
             </p>
           </div>
           <button
-            onClick={() => navigate("/login")}
+            onClick={handleLogout}
             className="flex items-center gap-2 rounded-md border px-3 py-2 text-sm text-gray-700 hover:bg-gray-200"
             title="Cerrar Sesión"
           >
@@ -379,18 +442,19 @@ export default function AdminCalendarPage() {
               </div>
             </div>
 
-              {/* Leyenda */}
-              <div className="mt-4 flex items-center gap-6 text-sm text-gray-700">
-                <Legend color="#0b43a8" label="Reservada" />
-                <Legend border label="Fuera de horario" />
-                <Legend checkbox label="Disponible" />
-              </div>
+            {/* Leyenda */}
+            <div className="mt-4 flex items-center gap-6 text-sm text-gray-700">
+              <Legend color="#0b43a8" label="Reservada" />
+              <Legend border label="Fuera de horario" />
+              <Legend checkbox label="Disponible" />
+            </div>
           </section>
         )}
         {activeTab === "mis" && (
           <ReservasHistorial
             eventos={eventos}
             onVerDetalle={onOpenEvento}
+            onEliminar={handleDeleteReserva}
           />
         )}
       </main>
@@ -454,7 +518,7 @@ export default function AdminCalendarPage() {
           setEditingEvento(null);
         }}
         onCreate={(data) => {
-          const nuevo: Evento = {
+          const nuevo: EventoSinId = {
             sala: data.sala,
             date: data.date,
             start: data.start,
@@ -464,28 +528,81 @@ export default function AdminCalendarPage() {
             motivo: data.motivo,
           };
 
-
-          if (haySolape(nuevo, eventos, editingEvento)) {
+          if (haySolape(nuevo as Evento, eventos, editingEvento)) {
             return "Ya existe una reserva en esa sala para un horario que se solapa.";
           }
 
           if (editingEvento) {
+            (async () => {
+              try {
+                const token = localStorage.getItem("token");
 
-            setEventos((prev) =>
-              prev.map((ev) =>
-                ev === editingEvento
-                  ? {
-                    ...ev,
-                    ...nuevo,
+                const res = await fetch(
+                  `http://localhost:3001/api/reservas/${editingEvento.id}`,
+                  {
+                    method: "PUT",
+                    headers: {
+                      "Content-Type": "application/json",
+                      Authorization: `Bearer ${token}`,
+                    },
+                    body: JSON.stringify(nuevo),
                   }
-                  : ev
-              )
-            );
-          } else {
+                );
 
-            setEventos((prev) => [...prev, nuevo]);
-            setSala(nuevo.sala);
-            setViewStart(startOfWeek(new Date(nuevo.date)));
+                if (!res.ok) {
+                  const data = await res.json().catch(() => null);
+                  alert(
+                    (data && data.message) ||
+                    `No se pudo actualizar la reserva (código ${res.status})`
+                  );
+                  return;
+                }
+
+                const actualizada: Evento = await res.json();
+
+                setEventos((prev) =>
+                  prev.map((ev) =>
+                    ev.id === actualizada.id ? actualizada : ev
+                  )
+                );
+              } catch (err) {
+                console.error("Error de red al actualizar reserva:", err);
+                alert("Error de red al actualizar la reserva");
+              }
+            })();
+          } else {
+            // Crear en el backend
+            (async () => {
+              try {
+
+                const token = localStorage.getItem("token");
+
+                const res = await fetch("http://localhost:3001/api/reservas", {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                  },
+                  body: JSON.stringify(nuevo),
+                });
+
+
+                if (!res.ok) {
+                  console.error("Error al crear reserva:", res.status, res.statusText);
+                  return;
+                }
+
+                const creada: Evento = await res.json();
+                // añadimos la reserva con id devuelto por el backend
+                setEventos((prev) => [...prev, creada]);
+
+                // ajustar sala y semana visible
+                setSala(creada.sala);
+                setViewStart(startOfWeek(new Date(creada.date)));
+              } catch (err) {
+                console.error("Error de red al crear reserva:", err);
+              }
+            })();
           }
 
           setEditingEvento(null);

@@ -4,4 +4,5 @@ export default defineConfig({
   plugins: [
     tailwindcss(),
   ],
+  base: '/Calendario_Reservas_ILYG/',
 })
