@@ -1,8 +1,9 @@
 
 // src/pages/Login.tsx
 import React, { useState } from "react";
-import logoIlyg from "../assets/logo-ilyg.png";
+import Calendar from "../assets/calendar.png";
 import { useNavigate } from "react-router-dom";
+
 
 export default function Login() {
   const [usuario, setUsuario] = useState("admin");
@@ -31,7 +32,7 @@ export default function Login() {
       if (!res.ok) {
         setError((data && data.message) || "Usuario o contraseña incorrectos");
         setLoading(false);
-        return; // ⬅️ NO navegamos si falló
+        return; 
       }
 
       // Guardar datos de sesión
@@ -55,7 +56,7 @@ export default function Login() {
         {/* Logo */}
         <div className="mb-6 flex justify-center">
           <img
-            src={logoIlyg}
+            src={Calendar}
             alt="Logo ILYG Kudos International"
             className="w-48"
           />
