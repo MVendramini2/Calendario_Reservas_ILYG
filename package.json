@@ -1,7 +1,6 @@
 {
    "name": "reserva-salas",
    "homepage": "https://MVendramini2.github.io/Calendario_Reservas_ILYG",
-   
    "scripts": {
       "dev": "vite",
       "build": "tsc -b && vite build",
