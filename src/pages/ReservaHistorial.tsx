@@ -16,7 +16,7 @@ const ReservasHistorial: React.FC<ReservasHistorialProps> = ({
   const [search, setSearch] = useState("");
   const [salaFilter, setSalaFilter] = useState<"todas" | Sala>("todas");
   const [page, setPage] = useState(1);
-  const pageSize = 1;
+  const pageSize = 4;
 
   const nombreSala = (s: "A" | "B") => (s === "A" ? "Grande" : "Chica");
 

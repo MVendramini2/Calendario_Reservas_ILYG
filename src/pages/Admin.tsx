@@ -23,6 +23,11 @@ export default function AdminCalendarPage() {
 
   const navigate = useNavigate();
 
+  const nombresSala: Record<Sala, string> = {
+  A: "Grande",
+  B: "Chica",
+  };
+
   // --- helpers de fecha ---
   const today = new Date();
   const startOfWeek = (d: Date) => {
@@ -441,13 +446,6 @@ export default function AdminCalendarPage() {
                 })}
               </div>
             </div>
-
-            {/* Leyenda */}
-            <div className="mt-4 flex items-center gap-6 text-sm text-gray-700">
-              <Legend color="#0b43a8" label="Reservada" />
-              <Legend border label="Fuera de horario" />
-              <Legend checkbox label="Disponible" />
-            </div>
           </section>
         )}
         {activeTab === "mis" && (
@@ -470,7 +468,7 @@ export default function AdminCalendarPage() {
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className="mb-1 text-lg font-semibold text-gray-800">
-              Reserva – Sala {modalEvento.sala}
+              Reserva – Sala {nombresSala[modalEvento.sala]}
             </h3>
             <p className="mb-4 text-sm text-gray-500">Detalle de la reserva</p>
 
@@ -678,41 +676,13 @@ function TabButton({
 
 const formatFechaLarga = (iso: string) => {
   const [year, month, day] = iso.split("-").map(Number);
-  const d = new Date(year, month - 1, day); // 👈 constructor local, sin UTC
+  const d = new Date(year, month - 1, day); 
   return d.toLocaleDateString("es-AR", {
     day: "numeric",
     month: "long",
     year: "numeric",
   });
 };
-
-
-function Legend({
-  color,
-  label,
-  border,
-  checkbox,
-}: {
-  color?: string;
-  label: string;
-  border?: boolean;
-  checkbox?: boolean;
-}) {
-  return (
-    <div className="flex items-center gap-2">
-      {checkbox ? (
-        <input type="checkbox" className="h-4 w-4 rounded border-gray-300" />
-      ) : (
-        <span
-          className={`inline-block h-3 w-3 rounded ${border ? "border" : ""
-            }`}
-          style={color ? { backgroundColor: color } : {}}
-        />
-      )}
-      <span>{label}</span>
-    </div>
-  );
-}
 
 function Item({
   label,

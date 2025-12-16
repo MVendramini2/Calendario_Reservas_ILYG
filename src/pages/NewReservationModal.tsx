@@ -122,7 +122,7 @@ const handleSubmit = (e: React.FormEvent) => {
     end: horaFin,
     persona: nombre,
     area: sector,
-    motivo: motivo || "Reserva de sala",
+    motivo: motivo,
   });
 
   if (typeof result === "string") {

@@ -1,10 +1,11 @@
 import React, { useState } from "react";
 import logoIlyg from "../assets/logo-ilyg.png";   
 import { useNavigate } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
 
 export default function Login() {
-  const [usuario, setUsuario] = useState("admin");
-  const [contrasena, setContrasena] = useState("123");
+  const [usuario, setUsuario] = useState("");
+  const [contrasena, setContrasena] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -47,7 +48,17 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-gray-100 flex items-center justify-center p-4">
+      <div className="min-h-screen w-full bg-gray-100 flex items-center justify-center p-4 relative">
+      
+      {/* --- BOTÓN DE VOLVER CON COLOR Y HOVER --- */}
+      <button 
+        onClick={() => navigate('/')} 
+        className="absolute top-6 left-6 flex items-center gap-2 text-[#0b43a8] font-medium transition-colors hover:text-[#093c92]"
+      >
+        <ArrowLeft className="w-5 h-5" />
+        <span className="text-sm">Volver al inicio</span>
+      </button>
+
       {/* Card */}
       <div className="w-full max-w-md rounded-xl bg-white shadow-xl p-8">
 
